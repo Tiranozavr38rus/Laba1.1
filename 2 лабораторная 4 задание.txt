@@ -1,0 +1,19 @@
+/*Hаписать пpогpамму пословного (подстрочного) пеpевода
+пpедложения, представленного в виде списка слов, с английского на фpанцузский (или любой другой) язык*/
+
+% соответствие слов на английском и французском языках
+translation(apple, pomme).
+translation(is, est).
+translation(red, rouge).
+translation(color, couleur).
+
+% предикат для перевода списка слов
+translate([], []).
+translate([Word|Tail1], [Translation|Tail2]) :- translation(Word, Translation), translate(Tail1, Tail2).
+
+% предложение для перевода
+sentence([is, red, apple, color], Fr) :- translate([is, red, apple, color], Fr).
+
+
+ %  ?-sentence([is, red, apple, color], Translation).
+ %   Translation = [est, rouge, pomme, couleur]
