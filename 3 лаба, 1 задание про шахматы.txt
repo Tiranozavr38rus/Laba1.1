@@ -1,0 +1,209 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+class Solution {
+    static int size = 3;
+    static int ai = 0;
+  static Map<Integer, Map<String, Map<String, Integer>>> variations = new HashMap<Integer, Map<String, Map<String, Integer>>>();
+
+    static {
+      variations.put(1, new HashMap<String, Map<String, Integer>>());
+      variations.put(2, new HashMap<String, Map<String, Integer>>());
+    }
+
+    public static void main(String[] args) {
+        int[][] var = {
+            {2, 2, 2},
+            {0, 0, 0},
+            {1, 1, 1}
+        };
+
+        generateVariations(var, false);
+        System.out.println(variations);
+        System.out.println("generating of variations's done");
+
+        machineLerning(variations);
+    }
+
+    static void generateVariations(int[][] variation, boolean bot) {
+        if (variation == null) {
+            return;
+        }
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (bot) {
+                    if (variation[i][j] == 2) {
+                        generateVariations(validateVariation(new int[]{i, j}, new int[]{i + 1, j}, copyArray(variation)), !bot);
+                        generateVariations(validateVariation(new int[]{i, j}, new int[]{i + 1, j + 1}, copyArray(variation)), !bot);
+                        generateVariations(validateVariation(new int[]{i, j}, new int[]{i + 1, j - 1}, copyArray(variation)), !bot);
+                    }
+                } else {
+                    if (variation[i][j] == 1) {
+                        generateVariations(validateVariation(new int[]{i, j}, new int[]{i - 1, j}, copyArray(variation)), !bot);
+                        generateVariations(validateVariation(new int[]{i, j}, new int[]{i - 1, j - 1}, copyArray(variation)), !bot);
+                        generateVariations(validateVariation(new int[]{i, j}, new int[]{i - 1, j + 1}, copyArray(variation)), !bot);
+                    }
+                }
+            }
+        }
+    }
+
+    static int[][] validateVariation(int[] ponPos, int[] nextPonPos, int[][] variation) {
+        if (isEndPos(variation)) {
+            return new int[0][0];
+        }
+
+        if (variation[ponPos[0]][ponPos[1]] == 0) {
+            return new int[0][0];
+        }
+
+        int deltax = Math.abs(ponPos[0] - nextPonPos[0]);
+        int deltay = Math.abs(ponPos[1] - nextPonPos[1]);
+
+        if (ponPos[0] >= 0 && ponPos[0] < size && ponPos[1] >= 0 && ponPos[1] < size
+                && nextPonPos[0] >= 0 && nextPonPos[0] < size && nextPonPos[1] >= 0 && nextPonPos[1] < size) {
+
+            if (deltay == 1) {
+                if (variation[nextPonPos[0]][nextPonPos[1]] != variation[ponPos[0]][ponPos[1]]
+                        && variation[nextPonPos[0]][nextPonPos[1]] != 0) {
+
+                    String var = fromListToString(copyArray(variation));
+                    String nextVar = fromListToString(getNextVariation(ponPos, nextPonPos, copyArray(variation)));
+
+                    if (!variations.get(variation[ponPos[0]][ponPos[1]]).containsKey(var)) {
+                      variations.get(variation[ponPos[0]][ponPos[1]]).put(var, new HashMap<String, Integer>());
+                    }
+                    variations.get(variation[ponPos[0]][ponPos[1]]).get(var).put(nextVar, 1);
+
+                    return getNextVariation(ponPos, nextPonPos, copyArray(variation));
+                } else {
+                    return new int[0][0];
+                }
+            } else if (deltax == 1) {
+                if (variation[nextPonPos[0]][nextPonPos[1]] == 0) {
+                    String var = fromListToString(copyArray(variation));
+                    String nextVar = fromListToString(getNextVariation(ponPos, nextPonPos, copyArray(variation)));
+
+                    if (!variations.get(variation[ponPos[0]][ponPos[1]]).containsKey(var)) {
+                        variations.get(variation[ponPos[0]][ponPos[1]]).put(var, new HashMap<String, Integer>());
+                    }
+                    variations.get(variation[ponPos[0]][ponPos[1]]).get(var).put(nextVar, 1);
+
+                    return getNextVariation(ponPos, nextPonPos, copyArray(variation));
+                } else {
+                    return new int[0][0];
+                }
+            }
+        }
+
+        return new int[0][0];
+    }
+
+    static int[][] getNextVariation(int[] ponPos, int[] nextPonPos, int[][] variation) {
+        variation[nextPonPos[0]][nextPonPos[1]] = variation[ponPos[0]][ponPos[1]];
+        variation[ponPos[0]][ponPos[1]] = 0;
+        return variation;
+    }
+
+    static String fromListToString(int[][] variation) {
+        StringBuilder string = new StringBuilder();
+        for (int[] row : variation) {
+            for (int val : row) {
+                string.append(val);
+            }
+        }
+        return string.toString();
+    }
+
+    static boolean isEndPos(int[][] variation) {
+        for (int val : variation[0]) {
+            if (val == 1) {
+                return true;
+            }
+        }
+
+        for (int val : variation[size - 1]) {
+            if (val == 2) {
+                return true;
+            }
+        }
+
+        String variationStr = fromListToString(variation);
+        return !variationStr.contains("1") || !variationStr.contains("2");
+    }
+
+  static void machineLerning(Map<Integer, Map<String, Map<String, Integer>>> variation) {
+      String possOfPons = "222000111";
+      for (int i = 0; i < 1500; i++) {
+          Map<String, Integer> moveForWight = new HashMap<String, Integer>();
+          Map<String, Integer> moveForBlack = new HashMap<String, Integer>();
+          while (true) {
+              printMatrixStr(possOfPons);
+              Map<String, Integer> ways;
+              try {
+                  ways = variation.get(ai + 1).get(possOfPons);
+              } catch (Exception e) {
+                  if (ai == 1) {
+                      for (Map.Entry<String, Integer> entry : moveForWight.entrySet()) {
+                          variations.get(1).get(entry.getKey()).put(entry.getKey(), entry.getValue() + 1);
+                      }
+                      for (Map.Entry<String, Integer> entry : moveForBlack.entrySet()) {
+                          if (variations.get(2).get(entry.getKey()).get(entry.getKey()) > 1) {
+                              variations.get(2).get(entry.getKey()).put(entry.getKey(), entry.getValue() - 1);
+                          }
+                      }
+                      System.out.println("wight won");
+                  } else {
+                      for (Map.Entry<String, Integer> entry : moveForWight.entrySet()) {
+                          if (variations.get(1).get(entry.getKey()).get(entry.getKey()) > 1) {
+                              variations.get(1).get(entry.getKey()).put(entry.getKey(), entry.getValue() - 1);
+                          }
+                      }
+                      for (Map.Entry<String, Integer> entry : moveForBlack.entrySet()) {
+                          variations.get(2).get(entry.getKey()).put(entry.getKey(), entry.getValue() + 1);
+                      }
+                      System.out.println("black won");
+                  }
+                  System.out.println("--------------");
+                  break;
+              }
+              Map<String, Integer> ways2 = new HashMap<String, Integer>();
+              for (Map.Entry<String, Integer> entry : ways.entrySet()) {
+                  for (int j = 0; j < entry.getValue(); j++) {
+                      ways2.put(entry.getKey(), entry.getValue());
+                  }
+              }
+              String[] ways2Array = ways2.keySet().toArray(new String[0]);
+              Random random = new Random();
+              String possOfPons2 = ways2Array[random.nextInt(ways2Array.length)];
+              if (ai == 1) {
+                  int nextMove = Integer.parseInt(possOfPons2);
+                  moveForBlack.put(possOfPons, nextMove);
+              } else {
+                  moveForWight.put(possOfPons, Integer.parseInt(possOfPons2));
+              }
+              possOfPons = possOfPons2;
+              ai = (ai + 1) % 2;
+          }
+          ai = 0;
+          possOfPons = "222000111";
+      }
+  }
+
+    static void printMatrixStr(String matrix) {
+        for (int i = 0; i < matrix.length(); i += size) {
+            System.out.println(matrix.substring(i, i + size));
+        }
+        System.out.println("🔻");
+    }
+
+    static int[][] copyArray(int[][] arr) {
+        int[][] copy = new int[arr.length][arr[0].length];
+        for (int i = 0; i < arr.length; i++) {
+            System.arraycopy(arr[i], 0, copy[i], 0, arr[i].length);
+        }
+        return copy;
+    }
+}
